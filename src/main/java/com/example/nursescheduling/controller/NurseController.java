@@ -3,13 +3,16 @@ package com.example.nursescheduling.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.nursescheduling.exception.ResourceNotFoundException;
 import com.example.nursescheduling.model.FrontEndData;
 import com.example.nursescheduling.model.Nurse;
 import com.example.nursescheduling.repository.FrontEndDataRepository;
@@ -18,26 +21,32 @@ import com.example.nursescheduling.repository.NurseRepository;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.IntVar;
 
-@CrossOrigin(origins="http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/v1/")
 public class NurseController {
 	@Autowired
 	private NurseRepository nurseRepository;
-	
+
 	@Autowired
 	private FrontEndDataRepository frontEndDataRepository;
-	//get all employees
+
 	@GetMapping("/nurses")
-	public List<Nurse> getAllNurse(){
-		return nurseRepository.findAll();
+	public List<FrontEndData> getNurse() {
+		return frontEndDataRepository.findAll();
 	}
-	
-	//create employee rest api
+
+	// get employee by id rest api
+	@GetMapping("/nurses/{id}")
+	public ResponseEntity<Nurse> getNurseById(@PathVariable Long id) {
+		Nurse nurse = nurseRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Nurse not exist with id :" + id));
+		return ResponseEntity.ok(nurse);
+	}
+
+	// create employee rest api
 	@PostMapping("/nurses")
 	public void createNurse(@RequestBody FrontEndData frontEndData) {
-//		NurseScheduling NS=new NurseScheduling(10,4,2,2,2);
-//		NS.solve();
 		System.out.println(frontEndData.toString());
 		frontEndDataRepository.save(frontEndData);
 		int period = 30;
@@ -48,21 +57,22 @@ public class NurseController {
 		String Off;
 		System.out.println("First Starting-------");
 		System.out.println(frontEndData.toString());
-		numNurse=frontEndData.getTotalNurse();
-		Off=frontEndData.getOff();
-		Morning=frontEndData.getMorning();
-		Evening=frontEndData.getEvening();
-		Night=frontEndData.getNight();
+		numNurse = frontEndData.getTotalNurse();
+		Off = frontEndData.getOff();
+		Morning = frontEndData.getMorning();
+		Evening = frontEndData.getEvening();
+		Night = frontEndData.getNight();
 		System.out.println("#######&&&*******");
-		System.out.println("Hellloooo  "+numNurse );
-		System.out.println("Hellloooo  "+Off );
-		System.out.println("Hellloooo  "+Morning );
-		System.out.println("Hellloooo  "+Night );
-		System.out.println("Hellloooo  "+Evening );
-		
+		System.out.println("Hellloooo  " + numNurse);
+		System.out.println("Hellloooo  " + Off);
+		System.out.println("Hellloooo  " + Morning);
+		System.out.println("Hellloooo  " + Night);
+		System.out.println("Hellloooo  " + Evening);
+
 		Model model = new Model("Nurse Scheduling");
 		IntVar[][] roster = model.intVarMatrix("poster", period, Integer.parseInt(numNurse), 0, 3);
-		int pattern[] = { Integer.parseInt(Off), Integer.parseInt(Morning), Integer.parseInt(Evening), Integer.parseInt(Night)}; // {off,Morning,Evening,Night}
+		int pattern[] = { Integer.parseInt(Off), Integer.parseInt(Morning), Integer.parseInt(Evening),
+				Integer.parseInt(Night) }; // {off,Morning,Evening,Night}
 
 		// int values[]= {0,1,2,3};
 		IntVar[] values = model.intVarArray("values", 4, new int[] { 0, 1, 2, 3 });
@@ -83,7 +93,7 @@ public class NurseController {
 		// set approximately 1 day off in every 5 days
 		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
 			IntVar total = model.intVar("Nurse" + (i + 1), 5, 8);
-			//System.out.println("Total is " + total.getValue());
+			// System.out.println("Total is " + total.getValue());
 			total.eq(roster[0][i].add(roster[1][i], roster[2][i], roster[3][i], roster[4][i])).post();
 			total.eq(roster[5][i].add(roster[6][i], roster[7][i], roster[8][i], roster[9][i])).post();
 			total.eq(roster[10][i].add(roster[11][i], roster[12][i], roster[13][i], roster[14][i])).post();
@@ -99,38 +109,34 @@ public class NurseController {
 		boolean isSolve = model.getSolver().solve();
 		if (isSolve) {
 			for (IntVar[] row : roster) {
-				String [] nurse1=new String[10];
-				int i=0;
+				String[] nurse1 = new String[10];
+				int i = 0;
 				for (IntVar box : row) {
 					if (box.getValue() == 0) {
-						nurse1[i]="O";
+						nurse1[i] = "O";
 						i++;
-						}
-					else if (box.getValue() == 1) {
-						nurse1[i]="M";
+					} else if (box.getValue() == 1) {
+						nurse1[i] = "M";
 						i++;
 					}
-						
+
 					else if (box.getValue() == 2) {
-						nurse1[i]="E";
+						nurse1[i] = "E";
 						i++;
 					}
-						
+
 					else {
-						nurse1[i]="N";
+						nurse1[i] = "N";
 						i++;
 					}
 				}
-				Nurse nurseSchedule=new Nurse(nurse1[0],nurse1[1],nurse1[2],nurse1[3],nurse1[4],nurse1[5],nurse1[6],nurse1[7],
-						nurse1[8],nurse1[9]);
+				Nurse nurseSchedule = new Nurse(nurse1[0], nurse1[1], nurse1[2], nurse1[3], nurse1[4], nurse1[5],
+						nurse1[6], nurse1[7], nurse1[8], nurse1[9]);
 				nurseRepository.save(nurseSchedule);
-				
+
 			}
 		} else {
 			System.out.println("No Solution Found");
 		}
-		
-		
-		
-		}
+	}
 }
