@@ -19,6 +19,7 @@ import com.example.nursescheduling.repository.FrontEndDataRepository;
 import com.example.nursescheduling.repository.NurseRepository;
 
 import org.chocosolver.solver.Model;
+import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -33,12 +34,16 @@ public class NurseController {
 
 	@GetMapping("/nurses")
 	public List<FrontEndData> getNurse() {
+		//1
+		frontEndDataRepository.deletePreviousRecords();
 		return frontEndDataRepository.findAll();
 	}
 
 	// get employee by id rest api
 	@GetMapping("/nurses/{id}")
 	public ResponseEntity<Nurse> getNurseById(@PathVariable Long id) {
+		//1
+		nurseRepository.deletePreviousRecords();
 		Nurse nurse = nurseRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Nurse not exist with id :" + id));
 		return ResponseEntity.ok(nurse);
@@ -49,7 +54,7 @@ public class NurseController {
 	public void createNurse(@RequestBody FrontEndData frontEndData) {
 		System.out.println(frontEndData.toString());
 		frontEndDataRepository.save(frontEndData);
-		int period = 30;
+		int period = 10;
 		String numNurse;
 		String Morning;
 		String Evening;
@@ -90,22 +95,90 @@ public class NurseController {
 			model.count(3, roster[i], Nocc).post();
 
 		}
+		
+		//3
+		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
+			IntVar m=model.intVar("m",1);
+			IntVar n=model.intVar("n",3);
+			for(int j=0;j<period - 1;j++) {
+				System.out.println("JaiShreeRam"+i+j);
+				model.ifThen(model.arithm(roster[j][i], "=", n), model.arithm(roster[j+1][i], "!=", m));
+				System.out.println("JaiShreeRam"+i+j+100);
+			
+			
+			}
+		}
+		
 		// set approximately 1 day off in every 5 days
 		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
 			IntVar total = model.intVar("Nurse" + (i + 1), 5, 8);
-			// System.out.println("Total is " + total.getValue());
+			//System.out.println("Total is " + m.getValue());
+			
+			
 			total.eq(roster[0][i].add(roster[1][i], roster[2][i], roster[3][i], roster[4][i])).post();
 			total.eq(roster[5][i].add(roster[6][i], roster[7][i], roster[8][i], roster[9][i])).post();
-			total.eq(roster[10][i].add(roster[11][i], roster[12][i], roster[13][i], roster[14][i])).post();
-			total.eq(roster[15][i].add(roster[16][i], roster[17][i], roster[18][i], roster[19][i])).post();
-			total.eq(roster[20][i].add(roster[21][i], roster[22][i], roster[23][i], roster[24][i])).post();
-			total.eq(roster[25][i].add(roster[26][i], roster[27][i], roster[28][i], roster[29][i])).post();
-
+			//total.eq(roster[10][i].add(roster[11][i], roster[12][i], roster[13][i], roster[14][i])).post();
+			//total.eq(roster[15][i].add(roster[16][i], roster[17][i], roster[18][i], roster[19][i])).post();
+			//total.eq(roster[20][i].add(roster[21][i], roster[22][i], roster[23][i], roster[24][i])).post();
+			//total.eq(roster[25][i].add(roster[26][i], roster[27][i], roster[28][i], roster[29][i])).post();
+			//int g=3;
+			
+//			for(int j=0;j<period - 1;j++) {
+//				System.out.println("HYGYGYS");
+//				//BoolVar x=model.intEqView(roster[j][i], g);
+//				System.out.println("RamRamRamRamRam");
+//				model.ifThen(
+//						model.arithm(roster[j][i],"=", n),
+//						model.arithm(roster[j+1][i], "!=", m)
+//						
+//						);
+				//System.out.print("Jitendra"+x);
+//				if()) {
+//					System.out.println("RamRamRamRamRam");
+//					System.out.println("Jitendra Patel");
+//					m.ne(roster[j+1][i]).post();
+//				}
+			//}
 			// make each nurse has shift change
-			for (int j = 0; j < period - 1; j += 2) {
+			
+			//2
+//			IntVar m=model.intVar("m",1);
+//			IntVar n=model.intVar("n",3);
+			//1
+//			for(int j=0;j<period - 1;j++) {
+//				System.out.println("JaiShreeRam"+i+j);
+//				model.ifThen(model.arithm(roster[j][i], "=", n), model.arithm(roster[j+1][i], "!=", m));
+//				System.out.println("JaiShreeRam"+i+j+100);
+//			
+//			}
+			
+			for (int j = 0; j < period - 1; j+=2) {
 				model.allDifferent(roster[j][i], roster[j + 1][i]).post();
 			}
+			
+//			for(int j=0;j<period-1;j++) {
+//				model.allDifferent(roster[j][i], roster[j + 1][i]).post();
+//			}
+//			IntVar m=model.intVar("e",1);
+//			IntVar n=model.intVar("n",3);
+//			
+//			for(int p=0;p<period-1;p++) {
+//				if(roster[p][i]==n) {
+//					m.eq(roster[p+1][i]).post();
+//				}
+//			}
+			
 		}
+//		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
+//			IntVar m=model.intVar("e",1);
+//			IntVar n=model.intVar("n",3);
+//			
+//			for(int p=0;p<period-1;p+=2) {
+//				if(roster[p][i]==n) {
+//					m.ne(roster[p+1][i]).post();
+//				}
+//			}
+//		}
 		boolean isSolve = model.getSolver().solve();
 		if (isSolve) {
 			for (IntVar[] row : roster) {
