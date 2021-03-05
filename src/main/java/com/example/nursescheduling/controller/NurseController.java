@@ -97,17 +97,13 @@ public class NurseController {
 		}
 		
 		//3
-		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
-			IntVar m=model.intVar("m",1);
-			IntVar n=model.intVar("n",3);
-			for(int j=0;j<period - 1;j++) {
-				System.out.println("JaiShreeRam"+i+j);
-				model.ifThen(model.arithm(roster[j][i], "=", n), model.arithm(roster[j+1][i], "!=", m));
-				System.out.println("JaiShreeRam"+i+j+100);
-			
-			
-			}
-		}
+//		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
+//			IntVar m=model.intVar("m",1);
+//			IntVar n=model.intVar("n",3);
+//			for(int j=0;j<period - 1;j++) {
+//				model.ifThen(model.arithm(roster[j][i], "=", n), model.arithm(roster[j+1][i], "!=", m));
+//			}
+//		}
 		
 		// set approximately 1 day off in every 5 days
 		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
@@ -121,64 +117,19 @@ public class NurseController {
 			//total.eq(roster[15][i].add(roster[16][i], roster[17][i], roster[18][i], roster[19][i])).post();
 			//total.eq(roster[20][i].add(roster[21][i], roster[22][i], roster[23][i], roster[24][i])).post();
 			//total.eq(roster[25][i].add(roster[26][i], roster[27][i], roster[28][i], roster[29][i])).post();
-			//int g=3;
 			
-//			for(int j=0;j<period - 1;j++) {
-//				System.out.println("HYGYGYS");
-//				//BoolVar x=model.intEqView(roster[j][i], g);
-//				System.out.println("RamRamRamRamRam");
-//				model.ifThen(
-//						model.arithm(roster[j][i],"=", n),
-//						model.arithm(roster[j+1][i], "!=", m)
-//						
-//						);
-				//System.out.print("Jitendra"+x);
-//				if()) {
-//					System.out.println("RamRamRamRamRam");
-//					System.out.println("Jitendra Patel");
-//					m.ne(roster[j+1][i]).post();
-//				}
-			//}
-			// make each nurse has shift change
 			
-			//2
-//			IntVar m=model.intVar("m",1);
-//			IntVar n=model.intVar("n",3);
-			//1
-//			for(int j=0;j<period - 1;j++) {
-//				System.out.println("JaiShreeRam"+i+j);
-//				model.ifThen(model.arithm(roster[j][i], "=", n), model.arithm(roster[j+1][i], "!=", m));
-//				System.out.println("JaiShreeRam"+i+j+100);
-//			
-//			}
-			
-			for (int j = 0; j < period - 1; j+=2) {
-				model.allDifferent(roster[j][i], roster[j + 1][i]).post();
+			IntVar m=model.intVar("m",1);
+			IntVar n=model.intVar("n",3);
+			for(int j=0;j<period - 1;j++) {
+				model.ifThen(model.arithm(roster[j][i], "=", n), model.arithm(roster[j+1][i], "!=", m));
 			}
 			
-//			for(int j=0;j<period-1;j++) {
-//				model.allDifferent(roster[j][i], roster[j + 1][i]).post();
-//			}
-//			IntVar m=model.intVar("e",1);
-//			IntVar n=model.intVar("n",3);
-//			
-//			for(int p=0;p<period-1;p++) {
-//				if(roster[p][i]==n) {
-//					m.eq(roster[p+1][i]).post();
-//				}
-//			}
-			
+			for (int j = 0; j < period - 1; j++) {
+				model.allDifferent(roster[j][i], roster[j + 1][i]).post();
+			}
 		}
-//		for (int i = 0; i < Integer.parseInt(numNurse); i++) {
-//			IntVar m=model.intVar("e",1);
-//			IntVar n=model.intVar("n",3);
-//			
-//			for(int p=0;p<period-1;p+=2) {
-//				if(roster[p][i]==n) {
-//					m.ne(roster[p+1][i]).post();
-//				}
-//			}
-//		}
+		
 		boolean isSolve = model.getSolver().solve();
 		if (isSolve) {
 			for (IntVar[] row : roster) {
@@ -203,8 +154,9 @@ public class NurseController {
 						i++;
 					}
 				}
-				Nurse nurseSchedule = new Nurse(nurse1[0], nurse1[1], nurse1[2], nurse1[3], nurse1[4], nurse1[5],
-						nurse1[6], nurse1[7], nurse1[8], nurse1[9]);
+//				Nurse nurseSchedule = new Nurse(nurse1[0], nurse1[1], nurse1[2], nurse1[3], nurse1[4], nurse1[5],
+//						nurse1[6], nurse1[7], nurse1[8], nurse1[9]);
+				Nurse nurseSchedule = new Nurse(nurse1[0], nurse1[1], nurse1[2], nurse1[3], nurse1[4]);
 				nurseRepository.save(nurseSchedule);
 
 			}

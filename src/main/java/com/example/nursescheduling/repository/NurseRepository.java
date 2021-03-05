@@ -14,7 +14,7 @@ public interface NurseRepository extends JpaRepository<Nurse,Long> {
 	
 	@Transactional
 	@Modifying
-	@Query(value="DELETE FROM nurses WHERE id<(SELECT * FROM (SELECT MAX(id) FROM nurses) as t)-29",nativeQuery=true) void deletePreviousRecords();
+	@Query(value="DELETE FROM nurses WHERE id<(SELECT * FROM (SELECT MAX(id) FROM nurses) as t)-9",nativeQuery=true) void deletePreviousRecords();
 	
 	
 
